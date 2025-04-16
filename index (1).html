@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Jeu de Devinette avec Feux d'Artifice</title>
+  <style>
+    /* Style de base pour la page */
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    /* Le canvas pour le feu d'artifice est positionné sur toute la page */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Jeu de devinette de nombre
+    alert("Bienvenue au jeu de devinette de nombre !");
+
+    let min = 1;
+    let max = 100;
+
+    const nombreMystere = Math.floor(Math.random() * max) + min; // Nombre aléatoire entre 1 et 100
+    let tentative = 0;
+    let deviner = false;
+
+    // Fonction qui crée et anime un feu d'artifice sur un canvas
+    function startFireworks() {
+      // Création (ou récupération) du canvas
+      let canvas = document.getElementById("fireworksCanvas");
+      if (!canvas) {
+        canvas = document.createElement("canvas");
+        canvas.id = "fireworksCanvas";
+        document.body.appendChild(canvas);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      const ctx = canvas.getContext("2d");
+
+      // Tableau pour stocker les particules de l'explosion
+      let particles = [];
+
+      // Fonction de création d'une explosion
+      function createExplosion(x, y) {
+        const numParticles = 100; // Nombre de particules par explosion
+        for (let i = 0; i < numParticles; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5 + 2;
+          particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: 'hsl(' + Math.floor(Math.random() * 360) + ', 100%, 50%)'
+          });
+        }
+      }
+
+      // Fonction d'animation
+      function update() {
+        // On dessine un léger fondu pour créer un effet de traînée
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Mise à jour et dessin de chaque particule
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.05; // effet de gravité
+          p.alpha -= 0.01;
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+          } else {
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+        // Si des particules existent encore, on continue l'animation
+        if (particles.length > 0) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      // Lancer une explosion au centre de l'écran
+      createExplosion(canvas.width / 2, canvas.height / 2);
+      update();
+    }
+
+    // Boucle de jeu avec prompt pour la saisie
+    while (!deviner) {
+      const reponse = prompt(`Devinez le nombre mystère entre ${min} et ${max} :`);
+      tentative++;
+
+      if (reponse === null) {
+        alert("Jeu annulé. Merci d'avoir joué !");
+        break;
+      }
+
+      // Récupération de la valeur en tant que nombre
+      const nombre = parseFloat(reponse);
+
+      // Vérifications de validité de la saisie
+      if (isNaN(nombre)) {
+        alert("Petit malin, ce n'est pas un nombre valide. Tu viens de gâcher un essai");
+      } else if (!Number.isInteger(nombre) || nombre < min || nombre > max) {
+        alert("Petit malin, ce n'est pas un nombre valide. Tu viens de gâcher un essai.");
+      } else if (nombre < nombreMystere) {
+        alert("C'est plus !");
+      } else if (nombre > nombreMystere) {
+        alert("C'est moins !");
+      } else {
+        alert(`Félicitations ! Vous avez trouvé le nombre ${nombreMystere} en ${tentative} tentative(s).`);
+        deviner = true;
+        startFireworks(); // Lancement du feu d'artifice
+      }
+    }
+  </script>
+</body>
+</html>
